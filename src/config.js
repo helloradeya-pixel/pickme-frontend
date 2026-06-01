@@ -1,1 +1,1 @@
-const API_URL = "https://pickme-backend.vercel.app"
+export const API = "https://pickme-backend.vercel.app"

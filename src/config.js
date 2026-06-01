@@ -1,1 +1,1 @@
-export const API = "https://photo-selector-backend-production-5d1d.up.railway.app"
+const API_URL = "https://pickme-backend.vercel.app"

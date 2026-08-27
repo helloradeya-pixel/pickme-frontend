@@ -14,7 +14,7 @@ export default function Gallery() {
   const [viewerIndex, setViewerIndex] = useState(null)
   const [hoveredIndex, setHoveredIndex] = useState(null)
 
-  // State & Ref untuk Drag / Swipe real-time
+  // State & Ref untuk Drag / Swipe real-time di Viewer
   const [dragOffset, setDragOffset] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const touchStartX = useRef(0)
@@ -32,9 +32,11 @@ export default function Gallery() {
   }, [code])
 
   // SELECT FOTO
-  const toggle = (p) => {
+  const toggle = (p, e) => {
+    if (e) e.stopPropagation()
+
     if (!selected.includes(p) && selected.length >= max) {
-      return alert("Limit foto tercapai")
+      return alert(`Batas maksimal memilih foto adalah ${max} foto.`)
     }
 
     setSelected(prev =>
@@ -52,18 +54,18 @@ export default function Gallery() {
 
     const msg =
       `📸 Client: ${clientName}\n\n` +
-      `Selected Photos:\n` +
+      `Selected Photos (${selected.length}/${max}):\n` +
       selected.map((p, i) => `${i + 1}. ${p.name || p.url}`).join("\n")
 
     let number = adminWA.replace(/[^0-9]/g, "")
     if (number.startsWith("0")) number = "62" + number.slice(1)
     if (!number.startsWith("62")) number = "62" + number
 
-    const url = `https://wa.me/${number}?text=${encodeURIComponent(msg)`
+    const url = `https://wa.me/${number}?text=${encodeURIComponent(msg)}`
     window.open(url, "_blank")
   }
 
-  // === HANDLER DRAG/SWIPE REAL-TIME ===
+  // === HANDLER DRAG/SWIPE REAL-TIME DI VIEWER ===
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX
     setIsDragging(true)
@@ -74,65 +76,46 @@ export default function Gallery() {
     const currentX = e.touches[0].clientX
     const diff = currentX - touchStartX.current
     currentTranslateX.current = diff
-    setDragOffset(diff) // Foto langsung bergeser mengikuti jari
+    setDragOffset(diff)
   }
 
   const handleTouchEnd = () => {
     if (!isDragging) return
     setIsDragging(false)
 
-    const threshold = window.innerWidth * 0.25 // Minimal geser 25% layar untuk pindah foto
+    const threshold = window.innerWidth * 0.25
 
     if (currentTranslateX.current > threshold && viewerIndex > 0) {
-      // Geser ke kanan -> Foto sebelumnya
       setViewerIndex(viewerIndex - 1)
     } else if (currentTranslateX.current < -threshold && viewerIndex < photos.length - 1) {
-      // Geser ke kiri -> Foto berikutnya
       setViewerIndex(viewerIndex + 1)
     }
 
-    // Reset posisi
     setDragOffset(0)
     currentTranslateX.current = 0
   }
 
   return (
-    <div style={{ padding: "24px 32px", fontFamily: "Roboto, Arial, sans-serif", backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
+    <div style={{ padding: "24px 20px 100px 20px", fontFamily: "Roboto, Arial, sans-serif", backgroundColor: "#f8f9fa", minHeight: "100vh", boxSizing: "border-box" }}>
 
-      {/* HEADER */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, borderBottom: "1px solid #dadce0", paddingBottom: 16 }}>
-        <div>
-          <h1 style={{ fontSize: "22px", color: "#202124", margin: 0, fontWeight: 500 }}>📁 {clientName || "Radeya Gallery"}</h1>
-          <p style={{ margin: "4px 0 0 0", color: "#5f6368", fontSize: "14px" }}>
-            Dipilih: <b>{selected.length}</b> dari {max} foto maksimum
-          </p>
-        </div>
-
-        <button
-          onClick={sendWA}
-          style={{
-            padding: "10px 20px",
-            background: "#1a73e8",
-            color: "white",
-            border: "none",
-            borderRadius: 24,
-            cursor: "pointer",
-            fontWeight: 500,
-            fontSize: "14px",
-            boxShadow: "0 1px 2px 0 rgba(60,64,67,0.3)",
-            transition: "all 0.2s ease"
-          }}
-        >
-          📤 Kirim ke WhatsApp
-        </button>
+      {/* HEADER ALA GOOGLE DRIVE */}
+      <div style={{ marginBottom: 20, borderBottom: "1px solid #dadce0", paddingBottom: 16 }}>
+        <h1 style={{ fontSize: "20px", color: "#202124", margin: 0, fontWeight: 500 }}>📁 {clientName || "Radeya Gallery"}</h1>
+        <p style={{ margin: "6px 0 0 0", color: "#5f6368", fontSize: "14px" }}>
+          Ketuk foto untuk memilih. Terpilih: <b style={{ color: "#1a73e8" }}>{selected.length}</b> / {max}
+        </p>
       </div>
 
-      {/* GRID */}
+      <div style={{ fontSize: "13px", color: "#5f6368", marginBottom: 12, fontWeight: 500, letterSpacing: "0.5px" }}>
+        DAFTAR FOTO PROJECT
+      </div>
+
+      {/* GRID FOTO */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-          gap: 16
+          gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+          gap: 12
         }}
       >
         {photos.map((p, i) => {
@@ -144,47 +127,45 @@ export default function Gallery() {
               key={i} 
               onMouseEnter={() => setHoveredIndex(i)}
               onMouseLeave={() => setHoveredIndex(null)}
+              onClick={() => toggle(p)}
               style={{ 
                 position: "relative",
-                backgroundColor: isSelected ? "#e8f0fe" : "#f1f3f4",
-                border: isSelected ? "2px solid #1a73e8" : "1px solid transparent",
+                backgroundColor: isSelected ? "#e8f0fe" : "#ffffff",
+                border: isSelected ? "2px solid #1a73e8" : "1px solid #e0e0e0",
                 borderRadius: 12,
                 overflow: "hidden",
                 cursor: "pointer",
-                boxShadow: isHovered ? "0 4px 12px rgba(60,64,67,0.15)" : "none",
-                transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+                boxShadow: isHovered || isSelected ? "0 4px 12px rgba(60,64,67,0.12)" : "0 1px 2px rgba(60,64,67,0.06)",
+                transition: "all 0.2s ease"
               }}
             >
+              {/* CHECKBOX / IKON CENTANG */}
               <div
-                onClick={(e) => {
-                  e.stopPropagation()
-                  toggle(p)
-                }}
                 style={{
                   position: "absolute",
-                  top: 10,
-                  left: 10,
-                  width: 22,
-                  height: 22,
-                  backgroundColor: isSelected ? "#1a73e8" : "rgba(255, 255, 255, 0.7)",
-                  border: isSelected ? "2px solid #1a73e8" : "2px solid #5f6368",
-                  borderRadius: 4,
-                  cursor: "pointer",
+                  top: 8,
+                  right: 8,
+                  width: 24,
+                  height: 24,
+                  backgroundColor: isSelected ? "#1a73e8" : "rgba(255, 255, 255, 0.85)",
+                  border: isSelected ? "2px solid #1a73e8" : "2px solid #bdc1c6",
+                  borderRadius: "50%",
                   zIndex: 2,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   color: "white",
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: "bold",
-                  opacity: isSelected || isHovered ? 1 : 0,
-                  transition: "opacity 0.2s ease"
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.15)",
+                  transition: "all 0.2s ease"
                 }}
               >
                 {isSelected ? "✓" : ""}
               </div>
 
-              <div onClick={() => setViewerIndex(i)} style={{ width: "100%", height: 160, overflow: "hidden" }}>
+              {/* THUMBNAIL FOTO */}
+              <div style={{ width: "100%", height: 140, overflow: "hidden", backgroundColor: "#f1f3f4" }}>
                 <img
                   src={p.url}
                   loading="lazy"
@@ -192,21 +173,90 @@ export default function Gallery() {
                     width: "100%",
                     height: "100%",
                     objectFit: "cover",
-                    transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                    transform: isHovered ? "scale(1.05)" : "scale(1)"
+                    transition: "transform 0.3s ease",
+                    transform: isHovered ? "scale(1.04)" : "scale(1)"
                   }}
                 />
               </div>
 
-              <div style={{ padding: "8px 10px", fontSize: "12px", color: "#3c4043", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {p.name || `Foto_${i + 1}`}
+              {/* NAMA FILE */}
+              <div style={{ padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "12px", color: "#3c4043", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", width: "70%" }}>
+                  {p.name || `Foto_${i + 1}`}
+                </span>
+                
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setViewerIndex(i)
+                  }}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    padding: "4px",
+                    color: "#5f6368"
+                  }}
+                  title="Perbesar foto"
+                >
+                  🔍
+                </button>
               </div>
+
             </div>
           )
         })}
       </div>
 
-      {/* FULLSCREEN VIEWER DENGAN REAL-TIME DRAG */}
+      {/* FLOATING ACTION BAR */}
+      {selected.length > 0 && (
+        <div style={{
+          position: "fixed",
+          bottom: 20,
+          left: "50%",
+          transform: "translateX(-50%)",
+          background: "#202124",
+          color: "white",
+          padding: "12px 20px",
+          borderRadius: 32,
+          display: "flex",
+          alignItems: "center",
+          gap: 16,
+          boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+          zIndex: 998,
+          animation: "slideUp 0.25s ease-out",
+          width: "90%",
+          maxWidth: "400px",
+          justifyContent: "space-between",
+          boxSizing: "border-box"
+        }}>
+          <span style={{ fontSize: "14px", fontWeight: 500 }}>
+            <b>{selected.length}</b> foto dipilih
+          </span>
+
+          <button
+            onClick={sendWA}
+            style={{
+              padding: "8px 16px",
+              background: "#22c55e",
+              color: "white",
+              border: "none",
+              borderRadius: 20,
+              cursor: "pointer",
+              fontWeight: 600,
+              fontSize: "13px",
+              display: "flex",
+              alignItems: "center",
+              gap: 6
+            }}
+          >
+            📤 Kirim ke WA
+          </button>
+        </div>
+      )}
+
+      {/* FULLSCREEN VIEWER */}
       {viewerIndex !== null && (
         <div
           onTouchStart={handleTouchStart}
@@ -215,15 +265,14 @@ export default function Gallery() {
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0, 0, 0, 0.9)",
+            background: "rgba(0, 0, 0, 0.95)",
             zIndex: 9999,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            overflow: "hidden" // Agar tidak ada scrollbar saat foto digeser keluar layar
+            overflow: "hidden"
           }}
         >
-          {/* TOMBOL TUTUP */}
           <button
             onClick={() => setViewerIndex(null)}
             style={{
@@ -236,23 +285,20 @@ export default function Gallery() {
               padding: "8px 14px",
               borderRadius: 20,
               cursor: "pointer",
-              zIndex: 10
+              zIndex: 10,
+              fontSize: "14px"
             }}
           >
             ✕ Tutup
           </button>
 
-          {/* TOMBOL PILIH DI VIEWER */}
           <div
-            onClick={(e) => {
-              e.stopPropagation()
-              toggle(photos[viewerIndex])
-            }}
+            onClick={(e) => toggle(photos[viewerIndex], e)}
             style={{
               position: "absolute",
               top: 20,
               right: 20,
-              padding: "6px 14px",
+              padding: "8px 16px",
               backgroundColor: selected.includes(photos[viewerIndex])
                 ? "#1a73e8"
                 : "rgba(255,255,255,0.2)",
@@ -265,21 +311,20 @@ export default function Gallery() {
               fontWeight: 500
             }}
           >
-            {selected.includes(photos[viewerIndex]) ? "✓ Terpilih" : "+ Pilih Foto"}
+            {selected.includes(photos[viewerIndex]) ? "✓ Terpilih" : "+ Pilih Foto Ini"}
           </div>
 
-          {/* TOMBOL PREV */}
           {viewerIndex > 0 && (
             <button
               onClick={() => setViewerIndex(viewerIndex - 1)}
               style={{
                 position: "absolute",
-                left: 20,
-                fontSize: 24,
+                left: 15,
+                fontSize: 22,
                 background: "rgba(255,255,255,0.2)",
                 border: "none",
                 color: "white",
-                padding: "12px 16px",
+                padding: "10px 14px",
                 borderRadius: "50%",
                 cursor: "pointer",
                 zIndex: 10
@@ -289,18 +334,17 @@ export default function Gallery() {
             </button>
           )}
 
-          {/* TOMBOL NEXT */}
           {viewerIndex < photos.length - 1 && (
             <button
               onClick={() => setViewerIndex(viewerIndex + 1)}
               style={{
                 position: "absolute",
-                right: 20,
-                fontSize: 24,
+                right: 15,
+                fontSize: 22,
                 background: "rgba(255,255,255,0.2)",
                 border: "none",
                 color: "white",
-                padding: "12px 16px",
+                padding: "10px 14px",
                 borderRadius: "50%",
                 cursor: "pointer",
                 zIndex: 10
@@ -310,21 +354,26 @@ export default function Gallery() {
             </button>
           )}
 
-          {/* GAMBAR UTAMA BERGERAK MENGIKUTI JARI */}
           <img
             src={photos[viewerIndex].url}
             style={{
-              maxWidth: "85vw",
+              maxWidth: "90vw",
               maxHeight: "85vh",
               objectFit: "contain",
               transform: `translateX(${dragOffset}px)`,
-              // Jika sedang tidak di-drag, berikan transisi halus saat kembali atau pindah foto
               transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
             }}
           />
 
         </div>
       )}
+
+      <style>{`
+        @keyframes slideUp {
+          from { transform: translate(-50%, 50px); opacity: 0; }
+          to { transform: translate(-50%, 0); opacity: 1; }
+        }
+      `}</style>
 
     </div>
   )

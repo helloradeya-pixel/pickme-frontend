@@ -14,9 +14,11 @@ export default function Gallery() {
   const [viewerIndex, setViewerIndex] = useState(null)
   const [hoveredIndex, setHoveredIndex] = useState(null)
 
-  // State untuk menangani sentuhan (swipe) di mobile
+  // State & Ref untuk Drag / Swipe real-time
+  const [dragOffset, setDragOffset] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
   const touchStartX = useRef(0)
-  const touchEndX = useRef(0)
+  const currentTranslateX = useRef(0)
 
   useEffect(() => {
     fetch(`${API}/project/${code}`)
@@ -57,36 +59,41 @@ export default function Gallery() {
     if (number.startsWith("0")) number = "62" + number.slice(1)
     if (!number.startsWith("62")) number = "62" + number
 
-    const url = `https://wa.me/${number}?text=${encodeURIComponent(msg)}`
+    const url = `https://wa.me/${number}?text=${encodeURIComponent(msg)`
     window.open(url, "_blank")
   }
 
-  // Handle Swipe Touch untuk Mobile
+  // === HANDLER DRAG/SWIPE REAL-TIME ===
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX
+    setIsDragging(true)
   }
 
   const handleTouchMove = (e) => {
-    touchEndX.current = e.touches[0].clientX
+    if (!isDragging) return
+    const currentX = e.touches[0].clientX
+    const diff = currentX - touchStartX.current
+    currentTranslateX.current = diff
+    setDragOffset(diff) // Foto langsung bergeser mengikuti jari
   }
 
   const handleTouchEnd = () => {
-    if (!touchStartX.current || !touchEndX.current) return
-    const distance = touchStartX.current - touchEndX.current
-    const minSwipeDistance = 50
+    if (!isDragging) return
+    setIsDragging(false)
 
-    if (distance > minSwipeDistance && viewerIndex < photos.length - 1) {
-      // Swipe kiri -> Next
+    const threshold = window.innerWidth * 0.25 // Minimal geser 25% layar untuk pindah foto
+
+    if (currentTranslateX.current > threshold && viewerIndex > 0) {
+      // Geser ke kanan -> Foto sebelumnya
+      setViewerIndex(viewerIndex - 1)
+    } else if (currentTranslateX.current < -threshold && viewerIndex < photos.length - 1) {
+      // Geser ke kiri -> Foto berikutnya
       setViewerIndex(viewerIndex + 1)
     }
 
-    if (distance < -minSwipeDistance && viewerIndex > 0) {
-      // Swipe kanan -> Prev
-      setViewerIndex(viewerIndex - 1)
-    }
-
-    touchStartX.current = 0
-    touchEndX.current = 0
+    // Reset posisi
+    setDragOffset(0)
+    currentTranslateX.current = 0
   }
 
   return (
@@ -145,7 +152,7 @@ export default function Gallery() {
                 overflow: "hidden",
                 cursor: "pointer",
                 boxShadow: isHovered ? "0 4px 12px rgba(60,64,67,0.15)" : "none",
-                transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)" // Efek smooth transition
+                transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
               }}
             >
               <div
@@ -199,7 +206,7 @@ export default function Gallery() {
         })}
       </div>
 
-      {/* FULLSCREEN VIEWER DENGAN ANIMASI FADE & SWIPE */}
+      {/* FULLSCREEN VIEWER DENGAN REAL-TIME DRAG */}
       {viewerIndex !== null && (
         <div
           onTouchStart={handleTouchStart}
@@ -213,7 +220,7 @@ export default function Gallery() {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            animation: "fadeIn 0.25s ease-out" // Animasi buka modal mulus
+            overflow: "hidden" // Agar tidak ada scrollbar saat foto digeser keluar layar
           }}
         >
           {/* TOMBOL TUTUP */}
@@ -229,8 +236,7 @@ export default function Gallery() {
               padding: "8px 14px",
               borderRadius: 20,
               cursor: "pointer",
-              zIndex: 10,
-              transition: "background 0.2s"
+              zIndex: 10
             }}
           >
             ✕ Tutup
@@ -256,8 +262,7 @@ export default function Gallery() {
               zIndex: 10,
               color: "white",
               fontSize: "14px",
-              fontWeight: 500,
-              transition: "all 0.2s"
+              fontWeight: 500
             }}
           >
             {selected.includes(photos[viewerIndex]) ? "✓ Terpilih" : "+ Pilih Foto"}
@@ -277,8 +282,7 @@ export default function Gallery() {
                 padding: "12px 16px",
                 borderRadius: "50%",
                 cursor: "pointer",
-                zIndex: 10,
-                transition: "background 0.2s"
+                zIndex: 10
               }}
             >
               ‹
@@ -299,37 +303,26 @@ export default function Gallery() {
                 padding: "12px 16px",
                 borderRadius: "50%",
                 cursor: "pointer",
-                zIndex: 10,
-                transition: "background 0.2s"
+                zIndex: 10
               }}
             >
               ›
             </button>
           )}
 
-          {/* GAMBAR UTAMA DENGAN TRANSISI HALUS */}
+          {/* GAMBAR UTAMA BERGERAK MENGIKUTI JARI */}
           <img
-            key={viewerIndex} // Key ini memaksa React me-render ulang dengan efek fade saat gambar diganti
             src={photos[viewerIndex].url}
             style={{
               maxWidth: "85vw",
               maxHeight: "85vh",
               objectFit: "contain",
-              animation: "scaleUp 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+              transform: `translateX(${dragOffset}px)`,
+              // Jika sedang tidak di-drag, berikan transisi halus saat kembali atau pindah foto
+              transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
             }}
           />
 
-          {/* CSS KEYFRAMES UNTUK ANIMASI HALUS */}
-          <style>{`
-            @keyframes fadeIn {
-              from { opacity: 0; }
-              to { opacity: 1; }
-            }
-            @keyframes scaleUp {
-              from { transform: scale(0.95); opacity: 0; }
-              to { transform: scale(1); opacity: 1; }
-            }
-          `}</style>
         </div>
       )}
 

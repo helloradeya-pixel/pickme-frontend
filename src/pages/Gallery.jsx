@@ -31,6 +31,18 @@ export default function Gallery() {
       })
   }, [code])
 
+  // EFFECT UNTUK MENGUNCI BACKGROUND SCROLL KETIKA VIEWER AKTIF
+  useEffect(() => {
+    if (viewerIndex !== null) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = "auto"
+    }
+    return () => {
+      document.body.style.overflow = "auto"
+    }
+  }, [viewerIndex])
+
   // SELECT FOTO
   const toggle = (p, e) => {
     if (e) e.stopPropagation()
@@ -65,7 +77,7 @@ export default function Gallery() {
     window.open(url, "_blank")
   }
 
-  // === HANDLER SLIDE INSTAGRAM STYLE ===
+  // === HANDLER SLIDE DENGAN MENCEGAH SCROLL BACKGROUND (preventDefault) ===
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX
     setIsDragging(true)
@@ -73,6 +85,12 @@ export default function Gallery() {
 
   const handleTouchMove = (e) => {
     if (!isDragging) return
+    
+    // MENCEGAH BROWSER MELAKUKAN SCROLL / REFRESH SAAT DIGESER DI HP
+    if (e.cancelable) {
+      e.preventDefault()
+    }
+
     const currentX = e.touches[0].clientX
     const diff = currentX - touchStartX.current
     currentTranslateX.current = diff
@@ -83,7 +101,7 @@ export default function Gallery() {
     if (!isDragging) return
     setIsDragging(false)
 
-    const threshold = window.innerWidth * 0.2 // Geser 20% saja sudah cukup untuk pindah slide
+    const threshold = window.innerWidth * 0.2 // Geser 20% layar untuk pindah foto
 
     if (currentTranslateX.current > threshold && viewerIndex > 0) {
       setViewerIndex(viewerIndex - 1)
@@ -253,7 +271,7 @@ export default function Gallery() {
         </div>
       )}
 
-      {/* FULLSCREEN VIEWER - INSTAGRAM SLIDER STYLE */}
+      {/* FULLSCREEN VIEWER - LOCKED TOUCH SCROLL */}
       {viewerIndex !== null && (
         <div
           onTouchStart={handleTouchStart}
@@ -266,7 +284,8 @@ export default function Gallery() {
             zIndex: 9999,
             overflow: "hidden",
             display: "flex",
-            alignItems: "center"
+            alignItems: "center",
+            touchAction: "none" // Mengunci interaksi sentuhan browser agar murni untuk custom handler
           }}
         >
           {/* TOMBOL TUTUP */}
@@ -312,7 +331,7 @@ export default function Gallery() {
             {selected.includes(photos[viewerIndex]) ? "✓ Terpilih" : "+ Pilih Foto Ini"}
           </div>
 
-          {/* INDICATOR HALAMAN (CONTOH: 3 / 10) */}
+          {/* INDICATOR HALAMAN */}
           <div style={{
             position: "absolute",
             top: 28,
@@ -355,7 +374,7 @@ export default function Gallery() {
           {/* TOMBOL NEXT */}
           {viewerIndex < photos.length - 1 && (
             <button
-              onClick={() => setViewerIndex(viewerIndex + 1)}
+              onClick={() => setViewerIndex(viewerIndex < photos.length - 1 ? viewerIndex + 1 : viewerIndex)}
               style={{
                 position: "absolute",
                 right: 15,
@@ -375,7 +394,7 @@ export default function Gallery() {
             </button>
           )}
 
-          {/* CAROUSEL TRACK (MENJAJARAKAN SEMUA FOTO SECARA HORIZONTAL) */}
+          {/* CAROUSEL TRACK */}
           <div style={{
             display: "flex",
             width: "100%",
@@ -404,7 +423,7 @@ export default function Gallery() {
                     maxWidth: "100%",
                     maxHeight: "100%",
                     objectFit: "contain",
-                    pointerEvents: "none", // Mencegah image dragging bawaan browser
+                    pointerEvents: "none",
                     userSelect: "none"
                   }}
                 />

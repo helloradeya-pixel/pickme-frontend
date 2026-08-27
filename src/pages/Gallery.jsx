@@ -14,7 +14,7 @@ export default function Gallery() {
   const [viewerIndex, setViewerIndex] = useState(null)
   const [hoveredIndex, setHoveredIndex] = useState(null)
 
-  // State & Ref untuk Drag / Swipe real-time di Viewer
+  // State & Ref untuk Slide Instagram-like
   const [dragOffset, setDragOffset] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const touchStartX = useRef(0)
@@ -65,7 +65,7 @@ export default function Gallery() {
     window.open(url, "_blank")
   }
 
-  // === HANDLER DRAG/SWIPE REAL-TIME DI VIEWER ===
+  // === HANDLER SLIDE INSTAGRAM STYLE ===
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX
     setIsDragging(true)
@@ -83,7 +83,7 @@ export default function Gallery() {
     if (!isDragging) return
     setIsDragging(false)
 
-    const threshold = window.innerWidth * 0.25
+    const threshold = window.innerWidth * 0.2 // Geser 20% saja sudah cukup untuk pindah slide
 
     if (currentTranslateX.current > threshold && viewerIndex > 0) {
       setViewerIndex(viewerIndex - 1)
@@ -98,7 +98,7 @@ export default function Gallery() {
   return (
     <div style={{ padding: "24px 20px 100px 20px", fontFamily: "Roboto, Arial, sans-serif", backgroundColor: "#f8f9fa", minHeight: "100vh", boxSizing: "border-box" }}>
 
-      {/* HEADER ALA GOOGLE DRIVE */}
+      {/* HEADER */}
       <div style={{ marginBottom: 20, borderBottom: "1px solid #dadce0", paddingBottom: 16 }}>
         <h1 style={{ fontSize: "20px", color: "#202124", margin: 0, fontWeight: 500 }}>📁 {clientName || "Radeya Gallery"}</h1>
         <p style={{ margin: "6px 0 0 0", color: "#5f6368", fontSize: "14px" }}>
@@ -139,7 +139,6 @@ export default function Gallery() {
                 transition: "all 0.2s ease"
               }}
             >
-              {/* CHECKBOX / IKON CENTANG */}
               <div
                 style={{
                   position: "absolute",
@@ -164,7 +163,6 @@ export default function Gallery() {
                 {isSelected ? "✓" : ""}
               </div>
 
-              {/* THUMBNAIL FOTO */}
               <div style={{ width: "100%", height: 140, overflow: "hidden", backgroundColor: "#f1f3f4" }}>
                 <img
                   src={p.url}
@@ -179,7 +177,6 @@ export default function Gallery() {
                 />
               </div>
 
-              {/* NAMA FILE */}
               <div style={{ padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontSize: "12px", color: "#3c4043", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", width: "70%" }}>
                   {p.name || `Foto_${i + 1}`}
@@ -256,7 +253,7 @@ export default function Gallery() {
         </div>
       )}
 
-      {/* FULLSCREEN VIEWER */}
+      {/* FULLSCREEN VIEWER - INSTAGRAM SLIDER STYLE */}
       {viewerIndex !== null && (
         <div
           onTouchStart={handleTouchStart}
@@ -267,12 +264,12 @@ export default function Gallery() {
             inset: 0,
             background: "rgba(0, 0, 0, 0.95)",
             zIndex: 9999,
+            overflow: "hidden",
             display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            overflow: "hidden"
+            alignItems: "center"
           }}
         >
+          {/* TOMBOL TUTUP */}
           <button
             onClick={() => setViewerIndex(null)}
             style={{
@@ -285,13 +282,14 @@ export default function Gallery() {
               padding: "8px 14px",
               borderRadius: 20,
               cursor: "pointer",
-              zIndex: 10,
+              zIndex: 20,
               fontSize: "14px"
             }}
           >
             ✕ Tutup
           </button>
 
+          {/* TOMBOL PILIH DI DALAM VIEWER */}
           <div
             onClick={(e) => toggle(photos[viewerIndex], e)}
             style={{
@@ -305,7 +303,7 @@ export default function Gallery() {
               border: "1px solid white",
               borderRadius: 20,
               cursor: "pointer",
-              zIndex: 10,
+              zIndex: 20,
               color: "white",
               fontSize: "14px",
               fontWeight: 500
@@ -314,12 +312,32 @@ export default function Gallery() {
             {selected.includes(photos[viewerIndex]) ? "✓ Terpilih" : "+ Pilih Foto Ini"}
           </div>
 
+          {/* INDICATOR HALAMAN (CONTOH: 3 / 10) */}
+          <div style={{
+            position: "absolute",
+            top: 28,
+            left: "50%",
+            transform: "translateX(-50%)",
+            color: "white",
+            fontSize: "14px",
+            fontWeight: 500,
+            zIndex: 20,
+            background: "rgba(0,0,0,0.4)",
+            padding: "4px 12px",
+            borderRadius: 12
+          }}>
+            {viewerIndex + 1} / {photos.length}
+          </div>
+
+          {/* TOMBOL PREV */}
           {viewerIndex > 0 && (
             <button
               onClick={() => setViewerIndex(viewerIndex - 1)}
               style={{
                 position: "absolute",
                 left: 15,
+                top: "50%",
+                transform: "translateY(-50%)",
                 fontSize: 22,
                 background: "rgba(255,255,255,0.2)",
                 border: "none",
@@ -327,19 +345,22 @@ export default function Gallery() {
                 padding: "10px 14px",
                 borderRadius: "50%",
                 cursor: "pointer",
-                zIndex: 10
+                zIndex: 20
               }}
             >
               ‹
             </button>
           )}
 
+          {/* TOMBOL NEXT */}
           {viewerIndex < photos.length - 1 && (
             <button
               onClick={() => setViewerIndex(viewerIndex + 1)}
               style={{
                 position: "absolute",
                 right: 15,
+                top: "50%",
+                transform: "translateY(-50%)",
                 fontSize: 22,
                 background: "rgba(255,255,255,0.2)",
                 border: "none",
@@ -347,23 +368,49 @@ export default function Gallery() {
                 padding: "10px 14px",
                 borderRadius: "50%",
                 cursor: "pointer",
-                zIndex: 10
+                zIndex: 20
               }}
             >
               ›
             </button>
           )}
 
-          <img
-            src={photos[viewerIndex].url}
-            style={{
-              maxWidth: "90vw",
-              maxHeight: "85vh",
-              objectFit: "contain",
-              transform: `translateX(${dragOffset}px)`,
-              transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-            }}
-          />
+          {/* CAROUSEL TRACK (MENJAJARAKAN SEMUA FOTO SECARA HORIZONTAL) */}
+          <div style={{
+            display: "flex",
+            width: "100%",
+            height: "100%",
+            alignItems: "center",
+            transform: `translateX(calc(${-viewerIndex * 100}vw + ${dragOffset}px))`,
+            transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)",
+            willChange: "transform"
+          }}>
+            {photos.map((p, idx) => (
+              <div 
+                key={idx} 
+                style={{
+                  minWidth: "100vw",
+                  height: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  boxSizing: "border-box",
+                  padding: "60px 20px"
+                }}
+              >
+                <img
+                  src={p.url}
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                    objectFit: "contain",
+                    pointerEvents: "none", // Mencegah image dragging bawaan browser
+                    userSelect: "none"
+                  }}
+                />
+              </div>
+            ))}
+          </div>
 
         </div>
       )}

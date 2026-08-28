@@ -3,8 +3,8 @@ import { API } from "../config"
 
 export default function Dashboard() {
   const [name, setName] = useState("")
-  const [wa, setWa] = useState("")
-  const [maxPhotos, setMaxPhotos] = useState("") // ❌ no default 10
+  const [wa, setWa] = useState("08211251570") // ⬅️ Nomor admin default terpasang
+  const [maxPhotos, setMaxPhotos] = useState("") 
   const [driveLink, setDriveLink] = useState("")
   const [link, setLink] = useState("")
   const [loading, setLoading] = useState(false)
@@ -77,14 +77,15 @@ export default function Dashboard() {
           style={inputStyle}
         />
 
-        {/* WA */}
+        {/* WA (DEFAULT TERISI) */}
         <input
           placeholder="WhatsApp admin"
+          value={wa}
           onChange={(e) => setWa(e.target.value)}
           style={inputStyle}
         />
 
-        {/* MAX PHOTOS (NO DEFAULT) */}
+        {/* MAX PHOTOS */}
         <input
           type="number"
           placeholder="Max pilihan foto"

@@ -11,6 +11,9 @@ export default function Gallery() {
   const [clientName, setClientName] = useState("")
   const [max, setMax] = useState(10)
 
+  // State untuk Pop-up TNC (Default true agar langsung muncul saat buka web)
+  const [showTnc, setShowTnc] = useState(true)
+
   const [viewerIndex, setViewerIndex] = useState(null)
   const [hoveredIndex, setHoveredIndex] = useState(null)
 
@@ -31,9 +34,9 @@ export default function Gallery() {
       })
   }, [code])
 
-  // EFFECT UNTUK MENGUNCI BACKGROUND SCROLL KETIKA VIEWER AKTIF
+  // EFFECT UNTUK MENGUNCI BACKGROUND SCROLL KETIKA VIEWER ATAU TNC AKTIF
   useEffect(() => {
-    if (viewerIndex !== null) {
+    if (viewerIndex !== null || showTnc) {
       document.body.style.overflow = "hidden"
     } else {
       document.body.style.overflow = "auto"
@@ -41,7 +44,7 @@ export default function Gallery() {
     return () => {
       document.body.style.overflow = "auto"
     }
-  }, [viewerIndex])
+  }, [viewerIndex, showTnc])
 
   // SELECT FOTO
   const toggle = (p, e) => {
@@ -86,7 +89,6 @@ export default function Gallery() {
   const handleTouchMove = (e) => {
     if (!isDragging) return
     
-    // MENCEGAH BROWSER MELAKUKAN SCROLL / REFRESH SAAT DIGESER DI HP
     if (e.cancelable) {
       e.preventDefault()
     }
@@ -101,7 +103,7 @@ export default function Gallery() {
     if (!isDragging) return
     setIsDragging(false)
 
-    const threshold = window.innerWidth * 0.2 // Geser 20% layar untuk pindah foto
+    const threshold = window.innerWidth * 0.2
 
     if (currentTranslateX.current > threshold && viewerIndex > 0) {
       setViewerIndex(viewerIndex - 1)
@@ -115,6 +117,75 @@ export default function Gallery() {
 
   return (
     <div style={{ padding: "24px 20px 100px 20px", fontFamily: "Roboto, Arial, sans-serif", backgroundColor: "#f8f9fa", minHeight: "100vh", boxSizing: "border-box" }}>
+
+      {/* POP-UP MODAL TNC */}
+      {showTnc && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.6)",
+          backdropFilter: "blur(4px)",
+          zIndex: 10000,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "20px",
+          boxSizing: "border-box"
+        }}>
+          <div style={{
+            backgroundColor: "#ffffff",
+            borderRadius: 16,
+            width: "100%",
+            maxWidth: "420px",
+            padding: "24px",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+            boxSizing: "border-box",
+            animation: "slideUp 0.25s ease-out"
+          }}>
+            <h2 style={{ margin: "0 0 12px 0", fontSize: "18px", color: "#202124", fontWeight: 600 }}>
+              ⚠️ Peringatan & Ketentuan
+            </h2>
+
+            <div style={{
+              fontSize: "13px",
+              color: "#5f6368",
+              lineHeight: "1.6",
+              maxHeight: "240px",
+              overflowY: "auto",
+              marginBottom: "20px",
+              paddingRight: "6px"
+            }}>
+              <p style={{ margin: "0 0 10px 0" }}>
+                • Editing akan diproses menggunakan sistem antrian, apabila ada revisi dalam list edit maka antriannya akan diulang.
+              </p>
+              <p style={{ margin: "0 0 10px 0" }}>
+                • Penyerahan list edit ke kami maksimal <b>H+7</b> dari file original yg sudah diberikan, lebih dari itu list edit tidak akan diproses lebih lanjut.
+              </p>
+              <p style={{ margin: "0", fontWeight: 500, color: "#202124" }}>
+                Terima kasih kak atas pengertian dan kerja samanya 🙏
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowTnc(false)}
+              style={{
+                width: "100%",
+                padding: "12px",
+                backgroundColor: "#1a73e8",
+                color: "white",
+                border: "none",
+                borderRadius: 24,
+                fontWeight: 600,
+                fontSize: "14px",
+                cursor: "pointer",
+                boxShadow: "0 2px 6px rgba(26,115,232,0.3)"
+              }}
+            >
+              Saya Mengerti & Lanjutkan
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* HEADER */}
       <div style={{ marginBottom: 20, borderBottom: "1px solid #dadce0", paddingBottom: 16 }}>
@@ -285,7 +356,7 @@ export default function Gallery() {
             overflow: "hidden",
             display: "flex",
             alignItems: "center",
-            touchAction: "none" // Mengunci interaksi sentuhan browser agar murni untuk custom handler
+            touchAction: "none"
           }}
         >
           {/* TOMBOL TUTUP */}
@@ -436,8 +507,8 @@ export default function Gallery() {
 
       <style>{`
         @keyframes slideUp {
-          from { transform: translate(-50%, 50px); opacity: 0; }
-          to { transform: translate(-50%, 0); opacity: 1; }
+          from { transform: translate(0, 30px); opacity: 0; }
+          to { transform: translate(0, 0); opacity: 1; }
         }
       `}</style>
 

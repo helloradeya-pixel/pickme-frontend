@@ -80,41 +80,6 @@ export default function Gallery() {
     window.open(url, "_blank")
   }
 
-  // === HANDLER SLIDE DENGAN MENCEGAH SCROLL BACKGROUND (preventDefault) ===
-  const handleTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX
-    setIsDragging(true)
-  }
-
-  const handleTouchMove = (e) => {
-    if (!isDragging) return
-    
-    if (e.cancelable) {
-      e.preventDefault()
-    }
-
-    const currentX = e.touches[0].clientX
-    const diff = currentX - touchStartX.current
-    currentTranslateX.current = diff
-    setDragOffset(diff)
-  }
-
-  const handleTouchEnd = () => {
-    if (!isDragging) return
-    setIsDragging(false)
-
-    const threshold = window.innerWidth * 0.2
-
-    if (currentTranslateX.current > threshold && viewerIndex > 0) {
-      setViewerIndex(viewerIndex - 1)
-    } else if (currentTranslateX.current < -threshold && viewerIndex < photos.length - 1) {
-      setViewerIndex(viewerIndex + 1)
-    }
-
-    setDragOffset(0)
-    currentTranslateX.current = 0
-  }
-
   return (
     <div style={{ padding: "24px 20px 100px 20px", fontFamily: "Roboto, Arial, sans-serif", backgroundColor: "#f8f9fa", minHeight: "100vh", boxSizing: "border-box" }}>
 
@@ -342,12 +307,9 @@ export default function Gallery() {
         </div>
       )}
 
-      {/* FULLSCREEN VIEWER - LOCKED TOUCH SCROLL */}
+      {/* FULLSCREEN VIEWER - SUPPORT PINCH TO ZOOM */}
       {viewerIndex !== null && (
         <div
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
           style={{
             position: "fixed",
             inset: 0,
@@ -356,7 +318,7 @@ export default function Gallery() {
             overflow: "hidden",
             display: "flex",
             alignItems: "center",
-            touchAction: "none"
+            touchAction: "pan-x pan-y pinch-zoom"
           }}
         >
           {/* TOMBOL TUTUP */}
@@ -445,7 +407,7 @@ export default function Gallery() {
           {/* TOMBOL NEXT */}
           {viewerIndex < photos.length - 1 && (
             <button
-              onClick={() => setViewerIndex(viewerIndex < photos.length - 1 ? viewerIndex + 1 : viewerIndex)}
+              onClick={() => setViewerIndex(viewerIndex + 1)}
               style={{
                 position: "absolute",
                 right: 15,
@@ -485,7 +447,8 @@ export default function Gallery() {
                   justifyContent: "center",
                   alignItems: "center",
                   boxSizing: "border-box",
-                  padding: "60px 20px"
+                  padding: "60px 20px",
+                  overflow: "auto"
                 }}
               >
                 <img
@@ -494,7 +457,6 @@ export default function Gallery() {
                     maxWidth: "100%",
                     maxHeight: "100%",
                     objectFit: "contain",
-                    pointerEvents: "none",
                     userSelect: "none"
                   }}
                 />

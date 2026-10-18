@@ -11,17 +11,13 @@ export default function Gallery() {
   const [clientName, setClientName] = useState("")
   const [max, setMax] = useState(10)
 
-  // State untuk Pop-up TNC (Default true agar langsung muncul saat buka web)
+  // State untuk Pop-up TNC
   const [showTnc, setShowTnc] = useState(true)
 
   const [viewerIndex, setViewerIndex] = useState(null)
   const [hoveredIndex, setHoveredIndex] = useState(null)
 
-  // State & Ref untuk Slide Instagram-like
-  const [dragOffset, setDragOffset] = useState(0)
-  const [isDragging, setIsDragging] = useState(false)
-  const touchStartX = useRef(0)
-  const currentTranslateX = useRef(0)
+  const carouselRef = useRef(null)
 
   useEffect(() => {
     fetch(`${API}/project/${code}`)
@@ -45,6 +41,26 @@ export default function Gallery() {
       document.body.style.overflow = "auto"
     }
   }, [viewerIndex, showTnc])
+
+  // SCROLL KE FOTO SESUAI VIEWER INDEX
+  useEffect(() => {
+    if (viewerIndex !== null && carouselRef.current) {
+      carouselRef.current.scrollTo({
+        left: viewerIndex * window.innerWidth,
+        behavior: "instant"
+      })
+    }
+  }, [viewerIndex])
+
+  // HANDLER UNTUK DETEKSI FOTO AKTIF SAAT DIPUTAR/DISWIPE
+  const handleScroll = () => {
+    if (carouselRef.current) {
+      const index = Math.round(carouselRef.current.scrollLeft / window.innerWidth)
+      if (index !== viewerIndex && index >= 0 && index < photos.length) {
+        setViewerIndex(index)
+      }
+    }
+  }
 
   // SELECT FOTO
   const toggle = (p, e) => {
@@ -307,7 +323,7 @@ export default function Gallery() {
         </div>
       )}
 
-      {/* FULLSCREEN VIEWER - SUPPORT PINCH TO ZOOM */}
+      {/* FULLSCREEN VIEWER - SUPPORT SWIPE & PINCH TO ZOOM */}
       {viewerIndex !== null && (
         <div
           style={{
@@ -315,10 +331,8 @@ export default function Gallery() {
             inset: 0,
             background: "rgba(0, 0, 0, 0.95)",
             zIndex: 9999,
-            overflow: "hidden",
             display: "flex",
-            alignItems: "center",
-            touchAction: "pan-x pan-y pinch-zoom"
+            alignItems: "center"
           }}
         >
           {/* TOMBOL TUTUP */}
@@ -384,7 +398,11 @@ export default function Gallery() {
           {/* TOMBOL PREV */}
           {viewerIndex > 0 && (
             <button
-              onClick={() => setViewerIndex(viewerIndex - 1)}
+              onClick={() => {
+                const prev = viewerIndex - 1
+                setViewerIndex(prev)
+                carouselRef.current?.scrollTo({ left: prev * window.innerWidth, behavior: "smooth" })
+              }}
               style={{
                 position: "absolute",
                 left: 15,
@@ -407,7 +425,11 @@ export default function Gallery() {
           {/* TOMBOL NEXT */}
           {viewerIndex < photos.length - 1 && (
             <button
-              onClick={() => setViewerIndex(viewerIndex + 1)}
+              onClick={() => {
+                const next = viewerIndex + 1
+                setViewerIndex(next)
+                carouselRef.current?.scrollTo({ left: next * window.innerWidth, behavior: "smooth" })
+              }}
               style={{
                 position: "absolute",
                 right: 15,
@@ -427,28 +449,35 @@ export default function Gallery() {
             </button>
           )}
 
-          {/* CAROUSEL TRACK */}
-          <div style={{
-            display: "flex",
-            width: "100%",
-            height: "100%",
-            alignItems: "center",
-            transform: `translateX(calc(${-viewerIndex * 100}vw + ${dragOffset}px))`,
-            transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)",
-            willChange: "transform"
-          }}>
+          {/* CAROUSEL TRACK DENGAN NATIVE SCROLL SNAP */}
+          <div
+            ref={carouselRef}
+            onScroll={handleScroll}
+            style={{
+              display: "flex",
+              width: "100vw",
+              height: "100vh",
+              overflowX: "auto",
+              overflowY: "hidden",
+              scrollSnapType: "x mandatory",
+              scrollBehavior: "smooth",
+              WebkitOverflowScrolling: "touch"
+            }}
+          >
             {photos.map((p, idx) => (
               <div 
                 key={idx} 
                 style={{
                   minWidth: "100vw",
-                  height: "100%",
+                  height: "100vh",
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
                   boxSizing: "border-box",
                   padding: "60px 20px",
-                  overflow: "auto"
+                  scrollSnapAlign: "start",
+                  scrollSnapStop: "always",
+                  flexShrink: 0
                 }}
               >
                 <img

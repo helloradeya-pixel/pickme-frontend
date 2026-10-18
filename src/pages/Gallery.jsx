@@ -256,7 +256,13 @@ export default function Gallery() {
               <div style={{ width: "100%", height: 140, overflow: "hidden", backgroundColor: "#f1f3f4" }}>
                 <img
                   src={p.url}
-                  loading="lazy"
+                  loading={i < 12 ? "eager" : "lazy"}
+                  onError={(e) => {
+                    // Retry load otomatis sekali jika jaringan sempat drop
+                    const src = e.target.src
+                    e.target.src = ""
+                    e.target.src = src
+                  }}
                   style={{
                     width: "100%",
                     height: "100%",

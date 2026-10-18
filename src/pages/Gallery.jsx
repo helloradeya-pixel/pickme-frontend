@@ -209,6 +209,26 @@ export default function Gallery() {
                 transition: "all 0.2s ease"
               }}
             >
+              {/* BADGE NOMOR URUT DI POJOK KIRI ATAS */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: 8,
+                  left: 8,
+                  backgroundColor: "rgba(0, 0, 0, 0.65)",
+                  color: "white",
+                  padding: "2px 8px",
+                  borderRadius: 12,
+                  zIndex: 2,
+                  fontSize: 11,
+                  fontWeight: "bold",
+                  backdropFilter: "blur(2px)"
+                }}
+              >
+                #{i + 1}
+              </div>
+
+              {/* LINGKARAN CENTANG SELEKSI DI POJOK KANAN ATAS */}
               <div
                 style={{
                   position: "absolute",
@@ -248,7 +268,7 @@ export default function Gallery() {
               </div>
 
               <div style={{ padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "12px", color: "#3c4043", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", width: "70%" }}>
+                <span style={{ fontSize: "12px", color: "#3c4043", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", width: "80%", fontWeight: 500 }}>
                   {p.name || `Foto_${i + 1}`}
                 </span>
                 

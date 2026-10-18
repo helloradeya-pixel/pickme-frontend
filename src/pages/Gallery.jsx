@@ -343,7 +343,7 @@ export default function Gallery() {
         </div>
       )}
 
-      {/* FULLSCREEN VIEWER - SUPPORT SWIPE & PINCH TO ZOOM */}
+      {/* FULLSCREEN VIEWER - SUPPORT SWIPE & PINCH TO ZOOM & RESPONSIVE LANDSCAPE */}
       {viewerIndex !== null && (
         <div
           style={{
@@ -360,16 +360,16 @@ export default function Gallery() {
             onClick={() => setViewerIndex(null)}
             style={{
               position: "absolute",
-              top: 20,
-              left: 20,
+              top: 16,
+              left: 16,
               background: "rgba(255,255,255,0.2)",
               border: "none",
               color: "white",
-              padding: "8px 14px",
+              padding: "6px 12px",
               borderRadius: 20,
               cursor: "pointer",
               zIndex: 20,
-              fontSize: "14px"
+              fontSize: "13px"
             }}
           >
             ✕ Tutup
@@ -380,9 +380,9 @@ export default function Gallery() {
             onClick={(e) => toggle(photos[viewerIndex], e)}
             style={{
               position: "absolute",
-              top: 20,
-              right: 20,
-              padding: "8px 16px",
+              top: 16,
+              right: 16,
+              padding: "6px 14px",
               backgroundColor: selected.includes(photos[viewerIndex])
                 ? "#1a73e8"
                 : "rgba(255,255,255,0.2)",
@@ -391,7 +391,7 @@ export default function Gallery() {
               cursor: "pointer",
               zIndex: 20,
               color: "white",
-              fontSize: "14px",
+              fontSize: "13px",
               fontWeight: 500
             }}
           >
@@ -401,11 +401,11 @@ export default function Gallery() {
           {/* INDICATOR HALAMAN */}
           <div style={{
             position: "absolute",
-            top: 28,
+            top: 22,
             left: "50%",
             transform: "translateX(-50%)",
             color: "white",
-            fontSize: "14px",
+            fontSize: "13px",
             fontWeight: 500,
             zIndex: 20,
             background: "rgba(0,0,0,0.4)",
@@ -425,14 +425,14 @@ export default function Gallery() {
               }}
               style={{
                 position: "absolute",
-                left: 15,
+                left: 12,
                 top: "50%",
                 transform: "translateY(-50%)",
                 fontSize: 22,
                 background: "rgba(255,255,255,0.2)",
                 border: "none",
                 color: "white",
-                padding: "10px 14px",
+                padding: "8px 12px",
                 borderRadius: "50%",
                 cursor: "pointer",
                 zIndex: 20
@@ -452,14 +452,14 @@ export default function Gallery() {
               }}
               style={{
                 position: "absolute",
-                right: 15,
+                right: 12,
                 top: "50%",
                 transform: "translateY(-50%)",
                 fontSize: 22,
                 background: "rgba(255,255,255,0.2)",
                 border: "none",
                 color: "white",
-                padding: "10px 14px",
+                padding: "8px 12px",
                 borderRadius: "50%",
                 cursor: "pointer",
                 zIndex: 20
@@ -494,7 +494,7 @@ export default function Gallery() {
                   justifyContent: "center",
                   alignItems: "center",
                   boxSizing: "border-box",
-                  padding: "60px 20px",
+                  padding: "12px",
                   scrollSnapAlign: "start",
                   scrollSnapStop: "always",
                   flexShrink: 0
@@ -503,8 +503,8 @@ export default function Gallery() {
                 <img
                   src={p.url}
                   style={{
-                    maxWidth: "100%",
-                    maxHeight: "100%",
+                    maxWidth: "calc(100vw - 32px)",
+                    maxHeight: "calc(100vh - 90px)",
                     objectFit: "contain",
                     userSelect: "none"
                   }}

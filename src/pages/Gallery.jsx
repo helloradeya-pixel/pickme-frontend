@@ -18,6 +18,7 @@ export default function Gallery() {
   const [hoveredIndex, setHoveredIndex] = useState(null)
 
   const carouselRef = useRef(null)
+  const isProgrammaticScroll = useRef(false) // Flag pemblokir tabrakan scroll event
 
   useEffect(() => {
     fetch(`${API}/project/${code}`)
@@ -42,37 +43,56 @@ export default function Gallery() {
     }
   }, [viewerIndex, showTnc])
 
-  // SCROLL KE FOTO SESUAI VIEWER INDEX
+  // SCROLL KE FOTO SESUAI VIEWER INDEX DENGAN KEAMANAN FLAG
   useEffect(() => {
     if (viewerIndex !== null && carouselRef.current) {
-      carouselRef.current.scrollTo({
-        left: viewerIndex * window.innerWidth,
-        behavior: "instant"
-      })
+      const container = carouselRef.current
+      const targetLeft = viewerIndex * container.clientWidth
+
+      // Hanya scroll jika posisi scroll saat ini belum sesuai
+      if (Math.abs(container.scrollLeft - targetLeft) > 5) {
+        isProgrammaticScroll.current = true
+        container.scrollTo({
+          left: targetLeft,
+          behavior: "instant"
+        })
+
+        // Reset flag setelah scroll selesai dilakukan
+        setTimeout(() => {
+          isProgrammaticScroll.current = false
+        }, 100)
+      }
     }
   }, [viewerIndex])
 
-  // HANDLER UNTUK DETEKSI FOTO AKTIF SAAT DIPUTAR/DISWIPE
+  // HANDLER UNTUK DETEKSI FOTO AKTIF SAAT SWIPE/SCROLL MANUAL
   const handleScroll = () => {
-    if (carouselRef.current) {
-      const index = Math.round(carouselRef.current.scrollLeft / window.innerWidth)
-      if (index !== viewerIndex && index >= 0 && index < photos.length) {
-        setViewerIndex(index)
-      }
+    // Abaikan jika scroll dipicu oleh klik tombol/program
+    if (isProgrammaticScroll.current || !carouselRef.current) return
+
+    const container = carouselRef.current
+    const itemWidth = container.clientWidth
+    if (itemWidth === 0) return
+
+    const index = Math.round(container.scrollLeft / itemWidth)
+    if (index !== viewerIndex && index >= 0 && index < photos.length) {
+      setViewerIndex(index)
     }
   }
 
-  // SELECT FOTO
+  // SELECT FOTO (Menggunakan komparasi URL agar konsisten)
   const toggle = (p, e) => {
     if (e) e.stopPropagation()
 
-    if (!selected.includes(p) && selected.length >= max) {
+    const isAlreadySelected = selected.some(x => x.url === p.url)
+
+    if (!isAlreadySelected && selected.length >= max) {
       return alert(`Batas maksimal memilih foto adalah ${max} foto.`)
     }
 
     setSelected(prev =>
-      prev.includes(p)
-        ? prev.filter(x => x !== p)
+      isAlreadySelected
+        ? prev.filter(x => x.url !== p.url)
         : [...prev, p]
     )
   }
@@ -189,12 +209,12 @@ export default function Gallery() {
         }}
       >
         {photos.map((p, i) => {
-          const isSelected = selected.includes(p)
+          const isSelected = selected.some(x => x.url === p.url)
           const isHovered = hoveredIndex === i
 
           return (
             <div 
-              key={i} 
+              key={p.url || i} 
               onMouseEnter={() => setHoveredIndex(i)}
               onMouseLeave={() => setHoveredIndex(null)}
               onClick={() => toggle(p)}
@@ -258,7 +278,6 @@ export default function Gallery() {
                   src={p.url}
                   loading={i < 12 ? "eager" : "lazy"}
                   onError={(e) => {
-                    // Retry load otomatis sekali jika jaringan sempat drop
                     const src = e.target.src
                     e.target.src = ""
                     e.target.src = src
@@ -349,8 +368,8 @@ export default function Gallery() {
         </div>
       )}
 
-      {/* FULLSCREEN VIEWER - SUPPORT SWIPE & PINCH TO ZOOM & RESPONSIVE LANDSCAPE */}
-      {viewerIndex !== null && (
+      {/* FULLSCREEN VIEWER */}
+      {viewerIndex !== null && photos[viewerIndex] && (
         <div
           style={{
             position: "fixed",
@@ -389,7 +408,7 @@ export default function Gallery() {
               top: 16,
               right: 16,
               padding: "6px 14px",
-              backgroundColor: selected.includes(photos[viewerIndex])
+              backgroundColor: selected.some(x => x.url === photos[viewerIndex].url)
                 ? "#1a73e8"
                 : "rgba(255,255,255,0.2)",
               border: "1px solid white",
@@ -401,10 +420,10 @@ export default function Gallery() {
               fontWeight: 500
             }}
           >
-            {selected.includes(photos[viewerIndex]) ? "✓ Terpilih" : "+ Pilih Foto Ini"}
+            {selected.some(x => x.url === photos[viewerIndex].url) ? "✓ Terpilih" : "+ Pilih Foto Ini"}
           </div>
 
-          {/* INDICATOR HALAMAN */}
+          {/* INDICATOR HALAMAN DAN NAMA FILE */}
           <div style={{
             position: "absolute",
             top: 22,
@@ -414,11 +433,12 @@ export default function Gallery() {
             fontSize: "13px",
             fontWeight: 500,
             zIndex: 20,
-            background: "rgba(0,0,0,0.4)",
+            background: "rgba(0,0,0,0.6)",
             padding: "4px 12px",
-            borderRadius: 12
+            borderRadius: 12,
+            textAlign: "center"
           }}>
-            {viewerIndex + 1} / {photos.length}
+            {viewerIndex + 1} / {photos.length} ({photos[viewerIndex].name || "Foto"})
           </div>
 
           {/* TOMBOL PREV */}
@@ -427,7 +447,6 @@ export default function Gallery() {
               onClick={() => {
                 const prev = viewerIndex - 1
                 setViewerIndex(prev)
-                carouselRef.current?.scrollTo({ left: prev * window.innerWidth, behavior: "smooth" })
               }}
               style={{
                 position: "absolute",
@@ -454,7 +473,6 @@ export default function Gallery() {
               onClick={() => {
                 const next = viewerIndex + 1
                 setViewerIndex(next)
-                carouselRef.current?.scrollTo({ left: next * window.innerWidth, behavior: "smooth" })
               }}
               style={{
                 position: "absolute",
@@ -492,7 +510,7 @@ export default function Gallery() {
           >
             {photos.map((p, idx) => (
               <div 
-                key={idx} 
+                key={p.url || idx} 
                 style={{
                   minWidth: "100vw",
                   height: "100vh",
@@ -522,12 +540,12 @@ export default function Gallery() {
         </div>
       )}
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes slideUp {
           from { transform: translate(0, 30px); opacity: 0; }
           to { transform: translate(0, 0); opacity: 1; }
         }
-      `}</style>
+      ` }} />
 
     </div>
   )

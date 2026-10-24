@@ -423,22 +423,27 @@ export default function Gallery() {
             {selected.some(x => x.url === photos[viewerIndex].url) ? "✓ Terpilih" : "+ Pilih Foto Ini"}
           </div>
 
-          {/* INDICATOR HALAMAN DAN NAMA FILE */}
+          {/* INDICATOR HALAMAN DAN NAMA FILE (DIPERBAIKI DISINI) */}
           <div style={{
             position: "absolute",
-            top: 22,
+            top: 58,
             left: "50%",
             transform: "translateX(-50%)",
             color: "white",
-            fontSize: "13px",
+            fontSize: "12px",
             fontWeight: 500,
             zIndex: 20,
-            background: "rgba(0,0,0,0.6)",
+            background: "rgba(0,0,0,0.65)",
             padding: "4px 12px",
             borderRadius: 12,
-            textAlign: "center"
+            textAlign: "center",
+            maxWidth: "80%",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            backdropFilter: "blur(4px)"
           }}>
-            {viewerIndex + 1} / {photos.length} ({photos[viewerIndex].name || "Foto"})
+            {viewerIndex + 1} / {photos.length} • {photos[viewerIndex].name || "Foto"}
           </div>
 
           {/* TOMBOL PREV */}
@@ -528,7 +533,7 @@ export default function Gallery() {
                   src={p.url}
                   style={{
                     maxWidth: "calc(100vw - 32px)",
-                    maxHeight: "calc(100vh - 90px)",
+                    maxHeight: "calc(100vh - 120px)",
                     objectFit: "contain",
                     userSelect: "none"
                   }}
